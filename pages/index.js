@@ -18,6 +18,7 @@ const Index = () => {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [subscription, setSubscription] = useState(null)
   const [registration, setRegistration] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.workbox !== undefined) {
@@ -36,15 +37,20 @@ const Index = () => {
 
   const subscribeButtonOnClick = async event => {
     event.preventDefault()
-    const sub = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: base64ToUint8Array(process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY)
-    })
-    // TODO: you should call your API to save subscription data on server in order to send web push notification from server
-    setSubscription(sub)
-    setIsSubscribed(true)
-    console.log('web push subscribed!')
-    console.log(sub)
+
+    try {
+      const sub = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: base64ToUint8Array(process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY)
+      })
+      // TODO: you should call your API to save subscription data on server in order to send web push notification from server
+      setSubscription(sub)
+      setIsSubscribed(true)
+      console.log('web push subscribed!')
+      console.log(sub)
+    } catch (error) {
+      setError(error.toString())
+    }
   }
 
   const unsubscribeButtonOnClick = async event => {
@@ -80,15 +86,22 @@ const Index = () => {
         <title>PWA Notifications</title>
       </Head>
       <h1>PWA Notifications</h1>
-      <button onClick={subscribeButtonOnClick} disabled={isSubscribed}>
-        Subscribe
-      </button>
-      <button onClick={unsubscribeButtonOnClick} disabled={!isSubscribed}>
-        Unsubscribe
-      </button>
-      <button onClick={sendNotificationButtonOnClick} disabled={!isSubscribed}>
-        Send Notification
-      </button>
+      <p>
+        <button onClick={subscribeButtonOnClick} disabled={isSubscribed}>
+          Subscribe
+        </button>
+        <button onClick={unsubscribeButtonOnClick} disabled={!isSubscribed}>
+          Unsubscribe
+        </button>
+      </p>
+      <p>
+        <button onClick={sendNotificationButtonOnClick} disabled={!isSubscribed}>
+          Send Notification
+        </button>
+      </p>
+      {
+        error && <p>{error}</p>
+      }
     </>
   )
 }
